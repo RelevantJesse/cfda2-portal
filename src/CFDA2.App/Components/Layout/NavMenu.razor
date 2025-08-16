@@ -1,0 +1,14 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="list-group">
+    <a href="/" class="list-group-item list-group-item-action">Home</a>
+    <a href="/ledger" class="list-group-item list-group-item-action">Ledger</a>
+    <a href="/payment-methods" class="list-group-item list-group-item-action">Payment Methods</a>
+    <a href="/classes" class="list-group-item list-group-item-action">Classes</a>
+    <AuthorizeView Roles="Admin">
+        <a href="/admin" class="list-group-item list-group-item-action">Admin</a>
+    </AuthorizeView>
+    <a href="/logout" class="list-group-item list-group-item-action">Logout</a>
+</div>

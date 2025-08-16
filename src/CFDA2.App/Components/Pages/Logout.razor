@@ -1,0 +1,12 @@
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<p>Signing out...</p>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Http.PostAsync("/api/auth/logout", null);
+        Navigation.NavigateTo("/login", true);
+    }
+}

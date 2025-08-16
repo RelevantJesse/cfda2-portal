@@ -1,0 +1,71 @@
+@inject HttpClient Http
+@using CFDA2.Shared.ViewModels
+@using System.Globalization
+
+<h3>Reports</h3>
+
+<h4>Aging</h4>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Family</th>
+            <th>Current</th>
+            <th>30+</th>
+            <th>60+</th>
+            <th>90+</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in _aging)
+        {
+            <tr>
+                <td>@row.FamilyName</td>
+                <td>@(row.CurrentCents / 100.0m).ToString("C2")</td>
+                <td>@(row.Over30Cents / 100.0m).ToString("C2")</td>
+                <td>@(row.Over60Cents / 100.0m).ToString("C2")</td>
+                <td>@(row.Over90Cents / 100.0m).ToString("C2")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4>Revenue</h4>
+<div class="mb-2">
+    <input type="date" @bind="_from" />
+    <input type="date" @bind="_to" />
+    <button class="btn btn-secondary" @onclick="LoadRevenue">Load</button>
+</div>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Revenue</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in _revenue)
+        {
+            <tr>
+                <td>@row.Date.ToString("yyyy-MM-dd")</td>
+                <td>@(row.RevenueCents / 100.0m).ToString("C2")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<AgingReportRow> _aging = new();
+    private List<RevenueReportRow> _revenue = new();
+    private DateTime _from = DateTime.Today.AddDays(-30);
+    private DateTime _to = DateTime.Today;
+    protected override async Task OnInitializedAsync()
+    {
+        _aging = (await Http.GetFromJsonAsync<List<AgingReportRow>>("/api/admin/reports/aging")) ?? new List<AgingReportRow>();
+    }
+    private async Task LoadRevenue()
+    {
+        var fromStr = _from.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var toStr = _to.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        _revenue = (await Http.GetFromJsonAsync<List<RevenueReportRow>>($"/api/admin/reports/revenue?from={fromStr}&to={toStr}")) ?? new List<RevenueReportRow>();
+    }
+}

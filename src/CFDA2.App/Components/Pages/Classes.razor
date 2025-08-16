@@ -1,0 +1,38 @@
+@inject HttpClient Http
+@using CFDA2.Shared.ViewModels
+
+<h3>Classes</h3>
+
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Level</th>
+            <th>Style</th>
+            <th>Day</th>
+            <th>Time</th>
+            <th>Tuition</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in _classes)
+        {
+            <tr>
+                <td>@c.Name</td>
+                <td>@c.Level</td>
+                <td>@c.Style</td>
+                <td>@c.DayOfWeek</td>
+                <td>@c.StartTime.ToString("hh:mm") - @c.EndTime.ToString("hh:mm")</td>
+                <td>@(c.MonthlyTuitionCents / 100.0m).ToString("C2")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<ClassView> _classes = new();
+    protected override async Task OnInitializedAsync()
+    {
+        _classes = (await Http.GetFromJsonAsync<List<ClassView>>("/api/portal/classes")) ?? new List<ClassView>();
+    }
+}
