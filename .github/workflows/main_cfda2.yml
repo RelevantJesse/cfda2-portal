@@ -10,7 +10,7 @@ on:
 
 env:
   APP_NAME: cfda2
-  PROJECT_PATH: src/CFDA2.App/CFDA2.App.csproj
+  PROJECT_PATH: CFDA2.App/CFDA2.App.csproj
   RUNTIME: linux-x64
   PUBLISH_DIR: publish
   ZIP_PATH: publish.zip
