@@ -1,0 +1,437 @@
+﻿@page "/parent-portal"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+
+<section class="content-surface portal-header">
+    <div class="ph-left">
+        <h1 class="display-hero">Parent Portal</h1>
+        <p class="lede">View balance, pay online, and manage your family details.</p>
+    </div>
+    <div class="ph-right">
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="label">Balance Due</div>
+                <div class="value">@BalanceDue.ToString("C")</div>
+                @if (PastDueAmount > 0)
+                {
+                    <div class="badge badge-pastdue">Past Due @PastDueAmount.ToString("C")</div>
+                }
+            </div>
+            <div class="stat-card">
+                <div class="label">Next Payment</div>
+                <div class="value">@NextPaymentDate.ToString("MMM d")</div>
+                <div class="muted">AutoPay: @(AutoPay ? "On" : "Off")</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Last Payment</div>
+                <div class="value">@(LastPaymentAmount > 0 ? LastPaymentAmount.ToString("C") : "None")</div>
+                <div class="muted">@LastPaymentDate?.ToString("MMM d, yyyy")</div>
+            </div>
+        </div>
+
+        <div class="actions-row">
+            <button class="btn btn-primary" @onclick="OpenPayAll">Pay Balance</button>
+            <a class="btn btn-outline" href="/registration">Register Another Class</a>
+        </div>
+    </div>
+</section>
+
+<section class="portal-grid">
+    <!-- Left column -->
+    <div class="portal-col">
+        <!-- Invoices -->
+        <section class="content-surface">
+            <div class="section-head">
+                <h2>Invoices</h2>
+                <div class="filters">
+                    <input type="search" placeholder="Search invoices..." @bind-value="invoiceQuery" @bind-value:event="oninput" />
+                    <select @bind="statusFilter">
+                        @foreach (var s in StatusOptions)
+                        {
+                            <option>@s</option>
+                        }
+                    </select>
+                    <button class="btn btn-outline" @onclick="SelectAllDue">Select All Due</button>
+                    <button class="btn btn-primary" @onclick="OpenPaySelected" disabled="@(SelectedInvoiceIds.Count == 0)">Pay Selected (@SelectedInvoiceIds.Count)</button>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="table-clean">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" @onchange="ToggleAllVisible" /></th>
+                            <th>Invoice</th>
+                            <th>Due</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var inv in VisibleInvoices)
+                        {
+                            var isChecked = SelectedInvoiceIds.Contains(inv.Id);
+                            <tr class="@(inv.Status == "Past Due" ? "row-pastdue" : "")">
+                                <td>
+                                    <input type="checkbox"
+                                           checked="@isChecked"
+                                           @onchange="e => ToggleInvoice(inv.Id, e)" />
+                                </td>
+                                <td>@inv.Id</td>
+                                <td>@inv.Due.ToString("MMM d, yyyy")</td>
+                                <td>@inv.Amount.ToString("C")</td>
+                                <td>
+                                    <span class="badge @(inv.Status switch { "Due" => "badge-due", "Paid" => "badge-paid", "Past Due" => "badge-pastdue", _ => "badge" })">
+                                        @inv.Status
+                                    </span>
+                                </td>
+                                <td>@inv.Description</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                @if (!VisibleInvoices.Any())
+                {
+                    <div class="no-results">
+                        <p>No invoices match those filters.</p>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <!-- Students -->
+        <section class="content-surface">
+            <div class="section-head">
+                <h2>Students</h2>
+                <a class="btn btn-outline" href="/registration">Add Student</a>
+            </div>
+
+            <div class="student-cards">
+                @foreach (var s in Students)
+                {
+                    <article class="student-card">
+                        <div class="sc-top">
+                            <h3>@s.Name</h3>
+                            <span class="chip">@s.AgeGroup</span>
+                        </div>
+                        <ul class="sc-classes">
+                            @foreach (var c in s.Classes)
+                            {
+                                <li>
+                                    <span class="chip @StyleChip(c.Style)">@c.Style</span>
+                                    <span class="muted">@c.Day @FormatTime(c.Start)-@FormatTime(c.End)</span>
+                                </li>
+                            }
+                        </ul>
+                        <div class="sc-actions">
+                            <a class="btn btn-outline" href="/schedule">View Schedule</a>
+                            <a class="btn btn-outline" href="/registration">Add Class</a>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    </div>
+
+    <!-- Right column -->
+    <aside class="portal-col">
+        <!-- Payment Methods -->
+        <section class="content-surface">
+            <div class="section-head">
+                <h2>Payment Methods</h2>
+                <div class="toggle">
+                    <input id="autopay" type="checkbox" @bind="AutoPay" />
+                    <label for="autopay">AutoPay</label>
+                </div>
+            </div>
+
+            <ul class="pm-list">
+                @foreach (var pm in Methods)
+                {
+                    <li class="pm-item">
+                        <div class="pm-info">
+                            <div class="pm-line">
+                                <strong>@pm.Brand</strong> •••• @pm.Last4
+                            </div>
+                            <div class="muted">Exp @pm.ExpMonth/@pm.ExpYear</div>
+                        </div>
+                        <div class="pm-actions">
+                            @if (pm.IsDefault)
+                            {
+                                <span class="badge badge-default">Default</span>
+                            }
+                            else
+                            {
+                                <button class="link" @onclick="() => MakeDefault(pm.Id)">Make Default</button>
+                            }
+                            <button class="link danger" @onclick="() => RemoveMethod(pm.Id)">Remove</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+
+            <div class="pm-add">
+                <h3>Add Method</h3>
+                <EditForm Model="@newMethod" OnValidSubmit="@AddMethod">
+                    <DataAnnotationsValidator />
+                    <div class="pm-grid">
+                        <InputText @bind-Value="newMethod.Brand" placeholder="Card brand" />
+                        <InputText @bind-Value="newMethod.Last4" placeholder="Last 4" />
+                        <InputNumber @bind-Value="newMethod.ExpMonth" />
+                        <InputNumber @bind-Value="newMethod.ExpYear" />
+                    </div>
+                    <button class="btn btn-outline" type="submit">Add</button>
+                </EditForm>
+            </div>
+        </section>
+
+        <!-- Documents -->
+        <section class="content-surface">
+            <div class="section-head"><h2>Documents</h2></div>
+            <ul class="doc-list">
+                <li><a href="@Assets["docs/handbook.pdf"]" target="_blank" rel="noopener">Parent Handbook</a></li>
+                <li><a href="@Assets["docs/policies.pdf"]" target="_blank" rel="noopener">Studio Policies</a></li>
+                <li><a href="@Assets["docs/waivers.pdf"]" target="_blank" rel="noopener">Waivers</a></li>
+            </ul>
+        </section>
+
+        <!-- Announcements -->
+        <section class="content-surface">
+            <div class="section-head"><h2>Announcements</h2></div>
+            <ul class="announce-list">
+                <li><strong>Recital</strong>: Costumes arrive next week. Check sizes in class.</li>
+                <li><strong>Holiday</strong>: Studio closed on Nov 28 for Thanksgiving.</li>
+            </ul>
+        </section>
+    </aside>
+</section>
+
+@if (ShowPay)
+{
+    <!-- Simple overlay payment panel -->
+    <div class="pay-overlay" @onclick="ClosePay">
+        <div class="pay-panel" @onclick:stopPropagation="true">
+            <h3>Pay @PayAmount.ToString("C")</h3>
+            <p class="muted">Selected invoices: @string.Join(", ", PayingInvoiceIds)</p>
+
+            <label class="field">
+                <span>Amount</span>
+                <InputNumber @bind-Value="PayAmount" />
+            </label>
+
+            <label class="field">
+                <span>Payment Method</span>
+                <InputSelect @bind-Value="SelectedMethodId">
+                    @foreach (var pm in Methods)
+                    {
+                        <option value="@pm.Id">@pm.Brand •••• @pm.Last4 @(pm.IsDefault ? "(Default)" : "")</option>
+                    }
+                </InputSelect>
+            </label>
+
+            <div class="actions-row spread">
+                <button class="btn btn-outline" @onclick="ClosePay">Cancel</button>
+                <button class="btn btn-primary" @onclick="ConfirmPay" disabled="@(PayAmount <= 0)">Pay Now</button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(PayConfirmation))
+            {
+                <div class="content-surface success">
+                    <strong>Payment successful.</strong> Confirmation: @PayConfirmation
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    // Keep comments ASCII only.
+
+    // ----- Mock data models
+    public record Invoice(string Id, DateTime Due, decimal Amount, string Status, string Description);
+    public record PaymentMethod(string Id, string Brand, string Last4, int ExpMonth, int ExpYear, bool IsDefault);
+    public record MiniClass(string Day, TimeSpan Start, TimeSpan End, string Style);
+    public record Student(string Id, string Name, string AgeGroup, List<MiniClass> Classes);
+
+    // ----- Sample data
+    List<Invoice> Invoices = new()
+    {
+        new("INV-1027", DateTime.Today.AddDays(7),  85m, "Due", "October Tuition - Mia"),
+        new("INV-1026", DateTime.Today.AddDays(-2), 40m, "Past Due", "Tap Shoes - Ethan"),
+        new("INV-1025", DateTime.Today.AddDays(-30),85m, "Paid", "September Tuition - Mia"),
+    };
+
+    List<PaymentMethod> Methods = new()
+    {
+        new("pm_1","Visa","4242", 12, 2027, true),
+        new("pm_2","Mastercard","4444",  8, 2026, false),
+    };
+
+    List<Student> Students = new()
+    {
+        new("s1","Mia Thompson","Kids (6–9)", new(){
+            new("Monday", new(16,30,0), new(17,15,0), "Ballet"),
+            new("Friday", new(17,00,0), new(18,00,0), "Tap"),
+        }),
+        new("s2","Ethan Thompson","Pre-Teen (10–12)", new(){
+            new("Wednesday", new(17,45,0), new(18,45,0), "Acro")
+        })
+    };
+
+    // ----- Derived stats
+    decimal BalanceDue => Invoices.Where(i => i.Status != "Paid").Sum(i => i.Amount);
+    decimal PastDueAmount => Invoices.Where(i => i.Status == "Past Due").Sum(i => i.Amount);
+    DateTime NextPaymentDate => Invoices.Where(i => i.Status == "Due").Select(i => i.Due).DefaultIfEmpty(DateTime.Today).Min();
+    decimal LastPaymentAmount => Invoices.Where(i => i.Status == "Paid").OrderByDescending(i => i.Due).Select(i => i.Amount).FirstOrDefault();
+    DateTime? LastPaymentDate => Invoices.Where(i => i.Status == "Paid").OrderByDescending(i => i.Due).Select(i => (DateTime?)i.Due).FirstOrDefault();
+
+    // ----- Invoice filters
+    string invoiceQuery = "";
+    string statusFilter = "All";
+    readonly string[] StatusOptions = new[] { "All", "Due", "Past Due", "Paid" };
+
+    IEnumerable<Invoice> VisibleInvoices => Invoices
+        .Where(i => statusFilter == "All" || i.Status.Equals(statusFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(i => string.IsNullOrWhiteSpace(invoiceQuery)
+            || i.Id.Contains(invoiceQuery, StringComparison.OrdinalIgnoreCase)
+            || i.Description.Contains(invoiceQuery, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(i => i.Status == "Past Due" ? 0 : 1)
+        .ThenBy(i => i.Due);
+
+    // ----- Selection
+    HashSet<string> SelectedInvoiceIds = new();
+
+    void ToggleInvoice(string id, ChangeEventArgs e)
+    {
+        var on = e?.Value?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+        if (on) SelectedInvoiceIds.Add(id); else SelectedInvoiceIds.Remove(id);
+    }
+
+    void ToggleAllVisible(ChangeEventArgs e)
+    {
+        var on = e?.Value?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+        if (on)
+            SelectedInvoiceIds = VisibleInvoices.Where(i => i.Status != "Paid").Select(i => i.Id).ToHashSet();
+        else
+            SelectedInvoiceIds.Clear();
+    }
+
+    void SelectAllDue()
+    {
+        SelectedInvoiceIds = Invoices.Where(i => i.Status != "Paid").Select(i => i.Id).ToHashSet();
+    }
+
+    // ----- Pay flow
+    bool ShowPay = false;
+    List<string> PayingInvoiceIds = new();
+    decimal PayAmount = 0m;
+    string SelectedMethodId = "pm_1";
+    string PayConfirmation = "";
+    bool AutoPay = false;
+
+    void OpenPayAll()
+    {
+        PayingInvoiceIds = Invoices.Where(i => i.Status != "Paid").Select(i => i.Id).ToList();
+        PayAmount = Invoices.Where(i => PayingInvoiceIds.Contains(i.Id)).Sum(i => i.Amount);
+        SelectedMethodId = Methods.FirstOrDefault(m => m.IsDefault)?.Id ?? Methods.First().Id;
+        PayConfirmation = "";
+        ShowPay = true;
+    }
+
+    void OpenPaySelected()
+    {
+        if (SelectedInvoiceIds.Count == 0) return;
+        PayingInvoiceIds = SelectedInvoiceIds.ToList();
+        PayAmount = Invoices.Where(i => PayingInvoiceIds.Contains(i.Id)).Sum(i => i.Amount);
+        SelectedMethodId = Methods.FirstOrDefault(m => m.IsDefault)?.Id ?? Methods.First().Id;
+        PayConfirmation = "";
+        ShowPay = true;
+    }
+
+    void ClosePay()
+    {
+        ShowPay = false;
+        PayingInvoiceIds.Clear();
+        PayAmount = 0m;
+        PayConfirmation = "";
+    }
+
+    async Task ConfirmPay()
+    {
+        // Simulate API call
+        await Task.Delay(300);
+        foreach (var id in PayingInvoiceIds)
+        {
+            var inv = Invoices.First(i => i.Id == id);
+            var idx = Invoices.IndexOf(inv);
+            Invoices[idx] = inv with { Status = "Paid" };
+        }
+        SelectedInvoiceIds.ExceptWith(PayingInvoiceIds);
+        PayConfirmation = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+        // Optionally close panel automatically
+        // ClosePay();
+        StateHasChanged();
+    }
+
+    // ----- Payment methods
+    PaymentMethodInput newMethod = new();
+
+    public class PaymentMethodInput
+    {
+        [Required] public string Brand { get; set; } = "";
+        [Required, StringLength(4, MinimumLength = 4)] public string Last4 { get; set; } = "";
+        [Range(1, 12)] public int ExpMonth { get; set; } = 12;
+        [Range(2024, 2100)] public int ExpYear { get; set; } = 2028;
+    }
+
+    Task AddMethod()
+    {
+        var id = $"pm_{Methods.Count + 1}";
+        Methods.Add(new PaymentMethod(id, newMethod.Brand, newMethod.Last4, newMethod.ExpMonth, newMethod.ExpYear, false));
+        newMethod = new PaymentMethodInput();
+        return Task.CompletedTask;
+    }
+
+    void MakeDefault(string id)
+    {
+        for (int i = 0; i < Methods.Count; i++)
+        {
+            var m = Methods[i];
+            Methods[i] = m with { IsDefault = m.Id == id };
+        }
+        SelectedMethodId = id;
+    }
+
+    void RemoveMethod(string id)
+    {
+        var m = Methods.FirstOrDefault(x => x.Id == id);
+        if (m is null) return;
+        var wasDefault = m.IsDefault;
+        Methods.Remove(m);
+        if (wasDefault && Methods.Count > 0)
+        {
+            Methods[0] = Methods[0] with { IsDefault = true };
+            SelectedMethodId = Methods[0].Id;
+        }
+    }
+
+    // ----- Helpers
+    string StyleChip(string style) => style switch
+    {
+        "Ballet" => "chip chip--ballet",
+        "Tap" => "chip chip--tap",
+        "Jazz" => "chip chip--jazz",
+        "Hip-Hop" => "chip chip--hiphop",
+        "Acro" => "chip chip--acro",
+        "Preschool" => "chip chip--preschool",
+        _ => "chip"
+    };
+
+    string FormatTime(TimeSpan t)
+    {
+        var dt = DateTime.Today.Add(t);
+        return dt.ToString("h:mm tt");
+    }
+}
