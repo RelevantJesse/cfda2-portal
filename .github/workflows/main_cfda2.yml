@@ -1,5 +1,5 @@
 # .github/workflows/deploy.yml
-# Builds a self-contained Blazor Server app and zip-deploys it to Azure Web App.
+# Linux App Service: framework-dependent publish (no RID, no self-contained)
 
 name: Build and deploy ASP.NET Core app to Azure Web App - cfda2
 
@@ -11,7 +11,6 @@ on:
 env:
   APP_NAME: cfda2
   PROJECT_PATH: CFDA2.App/CFDA2.App.csproj
-  RUNTIME: linux-x64
   PUBLISH_DIR: publish
   ZIP_PATH: publish.zip
 
@@ -33,18 +32,11 @@ jobs:
       - name: Restore
         run: dotnet restore ${{ env.PROJECT_PATH }}
 
-      # Publish the PROJECT (not the solution). Leave UseAppHost at default (true) for self-contained.
-      - name: Publish self-contained
+      # Framework-dependent publish so Azure runs: dotnet YourApp.dll
+      - name: Publish
         run: |
-          dotnet publish ${{ env.PROJECT_PATH }} -c Release -r ${{ env.RUNTIME }} --self-contained true -o "${{ env.PUBLISH_DIR }}"
-          ls -la "${{ env.PUBLISH_DIR }}"
-
-      - name: Create deploy zip
-        run: |
-          cd "${{ env.PUBLISH_DIR }}"
-          zip -r "../${{ env.ZIP_PATH }}" .
-          cd ..
-          ls -lh "${{ env.ZIP_PATH }}"
+          dotnet publish ${{ env.PROJECT_PATH }} -c Release -o "${{ env.PUBLISH_DIR }}"
+          cd "${{ env.PUBLISH_DIR }}" && zip -r "../${{ env.ZIP_PATH }}" . && cd ..
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
