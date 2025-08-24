@@ -130,27 +130,32 @@
     string query = string.Empty;
 
     readonly string[] DayOptions = ["All Days", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    readonly string[] StyleOptions = ["All Styles", "Ballet", "Tap", "Jazz", "Hip-Hop", "Acro", "Preschool"];
-    readonly string[] AgeOptions = ["All Ages", "Preschool (3–5)", "Kids (6–9)", "Pre-Teen (10–12)", "Teen (13–17)", "Adult"];
-    readonly string[] LevelOptions = ["All Levels", "Beginner", "Intermediate", "Advanced", "Open"];
+    readonly string[] StyleOptions = ["All Styles", "Ballet", "Tap", "Jazz", "Hip-Hop", "Acro"];
+    readonly string[] AgeOptions = ["All Ages", "Twinkle (2.5-3.5)", "Twinkle 2 (3.5-4.5)", "Shimmer (5-7)", "Glitter (7-9)", "Sparkle (10–12)", "Teen (12+)", "Dazzle", "Adult"];
+    readonly string[] LevelOptions = ["All Levels", "Open", "Team"];
 
     // ---- Sample dataset (replace with your own later)
     readonly List<ClassItem> AllClasses = new()
     {
-        new("Monday",    16,30, 17,15, "Studio A", "Ballet",   "Beginner",     "Kids (6–9)",      "Miss Lisa"),
-        new("Monday",    17,30, 18,30, "Studio A", "Tap",      "Intermediate", "Pre-Teen (10–12)","Miss Meghan"),
-        new("Monday",    18,30, 19,30, "Studio B", "Jazz",     "Open",         "Teen (13–17)",    "Miss Meghan"),
-        new("Tuesday",   16,00, 16,45, "Studio B", "Preschool","Beginner",     "Preschool (3–5)", "Miss Mikki"),
-        new("Tuesday",   17,00, 18,00, "Studio A", "Hip-Hop",  "Open",         "Kids (6–9)",      "Miss Mikki"),
-        new("Tuesday",   18,15, 19,15, "Studio A", "Hip-Hop",  "Intermediate", "Teen (13–17)",    "Miss Mikki"),
-        new("Wednesday", 16,30, 17,30, "Studio A", "Acro",     "Beginner",     "Kids (6–9)",      "Miss Elizabeth"),
-        new("Wednesday", 17,45, 18,45, "Studio A", "Acro",     "Intermediate", "Pre-Teen (10–12)","Miss Elizabeth"),
-        new("Thursday",  16,30, 17,30, "Studio B", "Ballet",   "Beginner",     "Kids (6–9)",      "Miss Lisa"),
-        new("Thursday",  17,45, 18,45, "Studio B", "Ballet",   "Intermediate", "Pre-Teen (10–12)","Miss Lisa"),
-        new("Friday",    17,00, 18,00, "Studio A", "Tap",      "Beginner",     "Kids (6–9)",      "Miss Meghan"),
-        new("Saturday",  09,30, 10,15, "Studio A", "Preschool","Beginner",     "Preschool (3–5)", "Miss Mikki"),
-        new("Saturday",  10,30, 11,30, "Studio A", "Jazz",     "Open",         "Kids (6–9)",      "Miss Meghan"),
-        new("Saturday",  11,45, 12,45, "Studio B", "Hip-Hop",  "Advanced",     "Teen (13–17)",    "Miss Mikki"),
+        new("Monday",    16,15, 17,15, "Studio A", "Acro",      "Open", "Sparkle (10–12)",      "Miss Lisa"),
+        new("Monday",    17,15, 18,00, "Studio A", "Jazz",      "Open", "Sparkle (10–12)",      "Miss Meghan"),
+        new("Monday",    18,00, 18,45, "Studio B", "Ballet",    "Open", "Sparkle (10–12)",      "Miss Meghan"),
+        new("Monday",    18,00, 18,45, "Studio B", "Hip-Hop",   "Open", "Glitter (7-9)",        "Miss Mikki"),
+        new("Monday",    18,45, 19,30, "Studio B", "Tap",       "Open", "Sparkle (10–12)",      "Miss Meghan"),
+        new("Monday",    18,45, 19,30, "Studio B", "Hip-Hop",   "Open", "Dazzle",               "Miss Mikki"),
+        new("Monday",    19,30, 20,00, "Studio B", "Tap",       "Open", "Dazzle",               "Miss Meghan"),
+        new("Monday",    19,30, 20,00, "Studio B", "Hip-Hop",   "Open", "Sparkle (10–12)",      "Miss Mikki"),
+        new("Tuesday",   16,00, 16,45, "Studio B", "Preschool", "Open", "Twinkle (2.5-3.5)",    "Miss Mikki"),
+        new("Tuesday",   17,00, 18,00, "Studio A", "Hip-Hop",   "Open", "Glitter (7-9)",        "Miss Mikki"),
+        new("Tuesday",   18,15, 19,15, "Studio A", "Hip-Hop",   "Open", "Teen (12+)",           "Miss Mikki"),
+        new("Wednesday", 16,30, 17,30, "Studio A", "Acro",      "Open", "Glitter (7-9)",        "Miss Elizabeth"),
+        new("Wednesday", 17,45, 18,45, "Studio A", "Acro",      "Open", "Sparkle (10–12)",      "Miss Elizabeth"),
+        new("Thursday",  16,30, 17,30, "Studio B", "Ballet",    "Open", "Glitter (7-9)",        "Miss Lisa"),
+        new("Thursday",  17,45, 18,45, "Studio B", "Ballet",    "Open", "Sparkle (10–12)",      "Miss Lisa"),
+        new("Friday",    17,00, 18,00, "Studio A", "Tap",       "Open", "Glitter (7-9)",        "Miss Meghan"),
+        new("Saturday",  09,30, 10,15, "Studio A", "Preschool", "Open", "Twinkle (2.5-3.5)",    "Miss Mikki"),
+        new("Saturday",  10,30, 11,30, "Studio A", "Jazz",      "Open", "Glitter (7-9)",        "Miss Meghan"),
+        new("Saturday",  11,45, 12,45, "Studio B", "Hip-Hop",   "Open", "Teen (12+)",           "Miss Mikki"),
     };
 
     static string Key(string? s)
