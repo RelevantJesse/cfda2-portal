@@ -1,0 +1,503 @@
+﻿@page "/registration"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+
+<section class="content-surface reg-shell">
+    <div class="reg-header">
+        <h1 class="display-hero">Registration</h1>
+        <p class="lede">Tell us about your dancer, accept the waivers, and choose classes. You’ll get a confirmation at the end—our team will follow up with next steps.</p>
+        <div class="stepper">
+            <div class="step @(step == 1 ? "current" : (step > 1 ? "done" : ""))"><span>1</span> Family Info</div>
+            <div class="step @(step == 2 ? "current" : (step > 2 ? "done" : ""))"><span>2</span> Select Classes</div>
+            <div class="step @(step == 3 ? "current" : "")"><span>3</span> Review & Confirm</div>
+        </div>
+    </div>
+
+    @if (step == 1)
+    {
+        <EditForm Model="form" OnValidSubmit="GoToStep2">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-grid">
+                <fieldset class="cardish">
+                    <legend>Student</legend>
+                    <div class="field">
+                        <label>First Name *</label>
+                        <InputText @bind-Value="form.StudentFirst" />
+                        <ValidationMessage For="() => form.StudentFirst" />
+                    </div>
+                    <div class="field">
+                        <label>Last Name *</label>
+                        <InputText @bind-Value="form.StudentLast" />
+                        <ValidationMessage For="() => form.StudentLast" />
+                    </div>
+                    <div class="field">
+                        <label>Date of Birth *</label>
+                        <InputDate @bind-Value="form.BirthDate" />
+                        <ValidationMessage For="() => form.BirthDate" />
+                    </div>
+                    <div class="field">
+                        <label>Experience Level *</label>
+                        <InputSelect @bind-Value="form.Level">
+                            @foreach (var l in LevelOptions)
+                            {
+                                <option value="@l">@l</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => form.Level" />
+                    </div>
+                    <div class="field full">
+                        <label>Interests (select any)</label>
+                        <div class="checks">
+                            @foreach (var s in StyleOptions.Where(s => s != "All Styles"))
+                            {
+                                <label class="check">
+                                    <input type="checkbox" checked="@form.Interests.Contains(s)" @onchange="e => ToggleInterest(s, e)" />
+                                    <span>@s</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+                    <div class="field full">
+                        <label>Notes / injuries / scheduling needs (optional)</label>
+                        <InputTextArea @bind-Value="form.Notes" rows="3" />
+                    </div>
+                </fieldset>
+
+                <fieldset class="cardish">
+                    <legend>Parent / Guardian</legend>
+                    <div class="field">
+                        <label>Full Name *</label>
+                        <InputText @bind-Value="form.GuardianName" />
+                        <ValidationMessage For="() => form.GuardianName" />
+                    </div>
+                    <div class="field">
+                        <label>Email *</label>
+                        <InputText @bind-Value="form.Email" />
+                        <ValidationMessage For="() => form.Email" />
+                    </div>
+                    <div class="field">
+                        <label>Phone *</label>
+                        <InputText @bind-Value="form.Phone" />
+                        <ValidationMessage For="() => form.Phone" />
+                    </div>
+                    <div class="field full">
+                        <label>Mailing Address (optional)</label>
+                        <InputText @bind-Value="form.Address" />
+                    </div>
+                    <div class="field">
+                        <label>Emergency Contact *</label>
+                        <InputText @bind-Value="form.EmergencyName" />
+                        <ValidationMessage For="() => form.EmergencyName" />
+                    </div>
+                    <div class="field">
+                        <label>Emergency Phone *</label>
+                        <InputText @bind-Value="form.EmergencyPhone" />
+                        <ValidationMessage For="() => form.EmergencyPhone" />
+                    </div>
+                </fieldset>
+
+                <fieldset class="cardish full">
+                    <legend>Waivers</legend>
+                    <div class="checks vertical">
+                        <label class="check">
+                            <InputCheckbox @bind-Value="form.AcceptLiability" />
+                            <span>I accept the liability waiver *</span>
+                        </label>
+                        <ValidationMessage For="() => form.AcceptLiability" />
+
+                        <label class="check">
+                            <InputCheckbox @bind-Value="form.AcceptPolicies" />
+                            <span>I agree to studio policies *</span>
+                        </label>
+                        <ValidationMessage For="() => form.AcceptPolicies" />
+
+                        <label class="check">
+                            <InputCheckbox @bind-Value="form.PhotoRelease" />
+                            <span>Optional: I grant permission for photos/videos of my dancer</span>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <!-- Honeypot (spam trap) -->
+                <input class="hp" autocomplete="off" @bind="form.Honeypot" />
+
+                <div class="actions-row">
+                    <button type="submit" class="btn btn-primary">Continue to Class Selection</button>
+                </div>
+            </div>
+        </EditForm>
+    }
+    else if (step == 2)
+    {
+        <div class="filters compact">
+            <div class="filters-row">
+                <label>
+                    <span>Day</span>
+                    <select @bind="dayFilter">
+                        @foreach (var d in DayOptions)
+                        {
+                            <option>@d</option>
+                        }
+                    </select>
+                </label>
+                <label>
+                    <span>Style</span>
+                    <select @bind="styleFilter">
+                        @foreach (var s in StyleOptions)
+                        {
+                            <option>@s</option>
+                        }
+                    </select>
+                </label>
+                <label class="grow">
+                    <span>Search</span>
+                    <input type="search" placeholder="Try 'ballet' or teacher" @bind-value="classQuery" @bind-value:event="oninput" />
+                </label>
+            </div>
+        </div>
+
+        @if (AutoAgeGroup is not null)
+        {
+            <div class="age-scope" title="Auto-filtered by birth date">
+                <span>Showing classes for</span>
+                <span class="chip">@AutoAgeGroup</span>
+                @if (AgeYears is int yrs)
+                {
+                    <span class="age">(age @yrs)</span>
+                }
+                <label class="check ml">
+                    <input type="checkbox" @bind="showAllAges" />
+                    <span>Show all ages</span>
+                </label>
+            </div>
+        }
+
+        @if (form.Interests?.Any() == true)
+        {
+            <div class="interest-scope" title="Auto-filtered by selected styles from Step 1">
+                <span>Filtering by</span>
+                @foreach (var i in form.Interests)
+                {
+                    <span class="chip">@i</span>
+                }
+                <label class="check ml">
+                    <input type="checkbox" @bind="showAllStyles" />
+                    <span>Show all styles</span>
+                </label>
+            </div>
+        }
+
+        @if (!showAllAges && AutoAgeGroup == "Adult" && !FilteredClasses.Any())
+        {
+            <p class="age-note">Don’t see an adult class yet? Toggle “Show all ages” to view all options—we’ll help place you.</p>
+        }
+
+
+        <div class="class-picker">
+            @foreach (var c in FilteredClasses)
+            {
+                var id = c.Id;
+                <label class="class-row">
+                    <input type="checkbox" checked="@form.SelectedClassIds.Contains(id)" @onchange="e => ToggleClass(id, e)" />
+                    <span class="when">@c.Day, @FormatTime(c.Start)–@FormatTime(c.End)</span>
+                    <span class="what"><span class="chip @StyleChip(c.Style)">@c.Style</span> @c.Level • @c.AgeGroup</span>
+                    <span class="where">@c.Studio • @c.Teacher</span>
+                </label>
+            }
+
+            @if (!FilteredClasses.Any())
+            {
+                <div class="no-results">
+                    <p>No classes match those filters.</p>
+                </div>
+            }
+        </div>
+
+        @if (Conflicts.Any())
+        {
+            <div class="content-surface warn">
+                <strong>Heads up:</strong>
+                <ul>
+                    @foreach (var grp in Conflicts)
+                    {
+                        <li>@grp.Value[0].PrettyTime — conflicts between <em>@grp.Value[0].Style</em> and <em>@grp.Value[1].Style</em>.</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <div class="actions-row spread">
+            <button class="btn btn-outline" @onclick="BackToStep1">Back</button>
+            <button class="btn btn-primary" @onclick="GoToStep3">Review Selection (@form.SelectedClassIds.Count)</button>
+        </div>
+    }
+    else if (step == 3)
+    {
+        <div class="review two-col">
+            <div class="cardish">
+                <h3>Student</h3>
+                <p>
+                    <strong>@form.StudentFirst @form.StudentLast</strong><br />
+                    DOB: @form.BirthDate:ddd, MMM d, yyyy<br />
+                    Level: @form.Level<br />
+                    Interests: @(form.Interests.Any() ? string.Join(", ", form.Interests) : "—")
+                </p>
+
+                @if (!string.IsNullOrWhiteSpace(form.Notes))
+                {
+                    <p><strong>Notes:</strong> @form.Notes</p>
+                }
+            </div>
+
+            <div class="cardish">
+                <h3>Guardian</h3>
+                <p>
+                    @form.GuardianName<br />
+                    <a href="mailto:@form.Email">@form.Email</a><br />
+                    <a href="tel:@form.Phone">@form.Phone</a><br />
+                    @form.Address
+                </p>
+                <p><strong>Emergency:</strong> @form.EmergencyName — @form.EmergencyPhone</p>
+                <p><strong>Waivers:</strong> Liability @(form.AcceptLiability ? "✓" : "✗"), Policies @(form.AcceptPolicies ? "✓" : "✗"), Photo @(form.PhotoRelease ? "✓" : "No")</p>
+            </div>
+
+            <div class="cardish full">
+                <h3>Selected Classes (@SelectedClasses.Count())</h3>
+                @if (SelectedClasses.Any())
+                {
+                    <ul class="selected-list">
+                        @foreach (var c in SelectedClasses)
+                        {
+                            <li>@c.Day @FormatTime(c.Start)–@FormatTime(c.End) — <strong>@c.Style</strong> (@c.Level, @c.AgeGroup) • @c.Studio • @c.Teacher</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>None selected. You can still submit and we’ll help you pick.</p>
+                }
+            </div>
+        </div>
+
+        <EditForm Model="form" OnValidSubmit="SubmitRegistration">
+            <DataAnnotationsValidator />
+            <div class="actions-row spread">
+                <button type="button" class="btn btn-outline" @onclick="BackToStep2">Back</button>
+                <button type="submit" class="btn btn-primary">Submit Registration</button>
+            </div>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(confirmationId))
+        {
+            <div class="content-surface success">
+                <h3>Thanks! 🎉</h3>
+                <p>Your registration has been received. Confirmation ID: <strong>@confirmationId</strong></p>
+                <p>We’ll email next steps shortly.</p>
+            </div>
+        }
+    }
+</section>
+
+@code {
+    int step = 1;
+    string confirmationId = string.Empty;
+
+    // ------------- FORM MODEL
+    RegistrationForm form = new();
+
+    bool showAllAges = false;
+
+    int? AgeYears => form.BirthDate is DateTime dob ? YearsOld(dob, DateTime.Today) : null;
+    string? AutoAgeGroup => AgeYears is int y ? AgeGroupFor(y) : null;
+
+    // ------------- LOOKUPS
+    readonly string[] LevelOptions = ["Beginner", "Intermediate", "Advanced", "Open"];
+    readonly string[] StyleOptions = ["All Styles", "Ballet", "Tap", "Jazz", "Hip-Hop", "Acro", "Preschool"];
+    readonly string[] DayOptions = ["All Days", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    // ------------- CLASS DATA (sample; replace with real)
+    readonly List<ClassRow> All = new()
+    {
+        new("Monday",    16,30, 17,15, "Studio A", "Ballet",   "Beginner",     "Kids (6–9)",      "Miss Lisa"),
+        new("Monday",    17,30, 18,30, "Studio A", "Tap",      "Intermediate", "Pre-Teen (10–12)","Miss Meghan"),
+        new("Monday",    18,30, 19,30, "Studio B", "Jazz",     "Open",         "Teen (13–17)",    "Miss Meghan"),
+        new("Tuesday",   16,00, 16,45, "Studio B", "Preschool","Beginner",     "Preschool (3–5)", "Miss Mikki"),
+        new("Tuesday",   17,00, 18,00, "Studio A", "Hip-Hop",  "Open",         "Kids (6–9)",      "Miss Mikki"),
+        new("Tuesday",   18,15, 19,15, "Studio A", "Hip-Hop",  "Intermediate", "Teen (13–17)",    "Miss Mikki"),
+        new("Wednesday", 16,30, 17,30, "Studio A", "Acro",     "Beginner",     "Kids (6–9)",      "Miss Elizabeth"),
+        new("Wednesday", 17,45, 18,45, "Studio A", "Acro",     "Intermediate", "Pre-Teen (10–12)","Miss Elizabeth"),
+        new("Thursday",  16,30, 17,30, "Studio B", "Ballet",   "Beginner",     "Kids (6–9)",      "Miss Lisa"),
+        new("Thursday",  17,45, 18,45, "Studio B", "Ballet",   "Intermediate", "Pre-Teen (10–12)","Miss Lisa"),
+        new("Friday",    17,00, 18,00, "Studio A", "Tap",      "Beginner",     "Kids (6–9)",      "Miss Meghan"),
+        new("Saturday",  09,30, 10,15, "Studio A", "Preschool","Beginner",     "Preschool (3–5)", "Miss Mikki"),
+        new("Saturday",  10,30, 11,30, "Studio A", "Jazz",     "Open",         "Kids (6–9)",      "Miss Meghan"),
+        new("Saturday",  11,45, 12,45, "Studio B", "Hip-Hop",  "Advanced",     "Teen (13–17)",    "Miss Mikki"),
+    };
+
+    // ------------- STEP 1 actions
+    void ToggleInterest(string interest, ChangeEventArgs e)
+    {
+        var isChecked = e?.Value?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+        if (isChecked) form.Interests.Add(interest); else form.Interests.Remove(interest);
+    }
+
+    void GoToStep2()
+    {
+        if (!string.IsNullOrWhiteSpace(form.Honeypot)) return; // spam bot
+        step = 2;
+    }
+
+    // ------------- STEP 2 filters
+    string dayFilter = "All Days";
+    string styleFilter = "All Styles";
+    string classQuery = "";
+    bool showAllStyles = false;
+
+    // live filtered classes
+    IEnumerable<ClassRow> FilteredClasses => All
+        .Where(c => dayFilter == "All Days" || c.Day.Equals(dayFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(c => styleFilter == "All Styles" || c.Style.Equals(styleFilter, StringComparison.OrdinalIgnoreCase))
+        // 👇 NEW: Only styles from Step 1 interests, unless "Show all styles"
+        .Where(c => showAllStyles || form.Interests.Count == 0 || InInterest(c.Style))
+        // (keep your age gate if you added it)
+        .Where(c => showAllAges || AutoAgeGroup is null || c.AgeGroup.Equals(AutoAgeGroup, StringComparison.OrdinalIgnoreCase))
+        .Where(c => string.IsNullOrWhiteSpace(classQuery)
+            || c.Style.Contains(classQuery, StringComparison.OrdinalIgnoreCase)
+            || c.Teacher.Contains(classQuery, StringComparison.OrdinalIgnoreCase)
+            || c.Level.Contains(classQuery, StringComparison.OrdinalIgnoreCase)
+            || c.AgeGroup.Contains(classQuery, StringComparison.OrdinalIgnoreCase)
+            || c.Studio.Contains(classQuery, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(c => DayIndex(c.Day)).ThenBy(c => c.Start);
+
+    static string Key(string? s) => new string((s ?? "")
+        .Trim()
+        .ToLowerInvariant()
+        .Normalize(NormalizationForm.FormKD)
+        .Where(char.IsLetterOrDigit)
+        .ToArray());
+
+    HashSet<string> InterestKeys => form.Interests.Select(Key).ToHashSet();
+    bool InInterest(string style) => InterestKeys.Contains(Key(style));
+
+    void ToggleClass(string id, ChangeEventArgs e)
+    {
+        var isChecked = e?.Value?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+        if (isChecked) form.SelectedClassIds.Add(id); else form.SelectedClassIds.Remove(id);
+    }
+
+    IEnumerable<ClassRow> SelectedClasses => All.Where(c => form.SelectedClassIds.Contains(c.Id));
+
+    // conflicts: group by overlapping times per day
+    Dictionary<string, List<ClassRow>> Conflicts =>
+        SelectedClasses
+            .GroupBy(c => c.Day)
+            .SelectMany(g => from a in g from b in g where a.Id != b.Id && Overlaps(a, b) select (a, b))
+            .GroupBy(x => $"{x.a.Day}-{x.a.Start}-{x.b.Start}")
+            .ToDictionary(k => k.Key, v => new List<ClassRow> { v.First().a, v.First().b });
+
+    static bool Overlaps(ClassRow a, ClassRow b)
+        => a.Day.Equals(b.Day, StringComparison.OrdinalIgnoreCase)
+           && a.Start < b.End && b.Start < a.End;
+
+    void BackToStep1() => step = 1;
+    void GoToStep3() => step = 3;
+    void BackToStep2() => step = 2;
+
+    // ------------- SUBMIT
+    async Task SubmitRegistration()
+    {
+        // Normally: send to API / email. Here we just simulate success.
+        await Task.Delay(200);
+        confirmationId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+        // Optionally: clear selection / reset
+        // form = new RegistrationForm();
+        // step = 1;
+    }
+
+    // ------------- helpers
+    int DayIndex(string day) => day switch
+    {
+        "Monday" => 1,
+        "Tuesday" => 2,
+        "Wednesday" => 3,
+        "Thursday" => 4,
+        "Friday" => 5,
+        "Saturday" => 6,
+        "Sunday" => 7,
+        _ => 0
+    };
+
+    string FormatTime(TimeSpan t)
+    {
+        var dt = DateTime.Today.Add(t);
+        return dt.ToString("h:mm tt");
+    }
+
+    string StyleChip(string style) => style switch
+    {
+        "Ballet" => "chip chip--ballet",
+        "Tap" => "chip chip--tap",
+        "Jazz" => "chip chip--jazz",
+        "Hip-Hop" => "chip chip--hiphop",
+        "Acro" => "chip chip--acro",
+        "Preschool" => "chip chip--preschool",
+        _ => "chip"
+    };
+
+    static int YearsOld(DateTime dob, DateTime today)
+    {
+        var age = today.Year - dob.Year;
+        if (today.Month < dob.Month || (today.Month == dob.Month && today.Day < dob.Day)) age--;
+        return age;
+    }
+
+    static string AgeGroupFor(int age) => age <= 5 ? "Preschool (3–5)"
+        : age <= 9 ? "Kids (6–9)"
+        : age <= 12 ? "Pre-Teen (10–12)"
+        : age <= 17 ? "Teen (13–17)"
+        : "Adult";
+
+    // ------------- TYPES
+    public class RegistrationForm
+    {
+        [Required] public string StudentFirst { get; set; } = "";
+        [Required] public string StudentLast { get; set; } = "";
+        [Required] public DateTime? BirthDate { get; set; }
+        [Required] public string Level { get; set; } = "Beginner";
+        public HashSet<string> Interests { get; set; } = new();
+        public string? Notes { get; set; }
+
+        [Required] public string GuardianName { get; set; } = "";
+        [Required, EmailAddress] public string Email { get; set; } = "";
+        [Required] public string Phone { get; set; } = "";
+        public string? Address { get; set; }
+
+        [Required] public string EmergencyName { get; set; } = "";
+        [Required] public string EmergencyPhone { get; set; } = "";
+
+        [Required, Range(typeof(bool), "true", "true", ErrorMessage = "Liability waiver is required.")] public bool AcceptLiability { get; set; }
+        [Required, Range(typeof(bool), "true", "true", ErrorMessage = "Studio policies must be accepted.")] public bool AcceptPolicies { get; set; }
+        public bool PhotoRelease { get; set; }
+
+        public HashSet<string> SelectedClassIds { get; set; } = new();
+
+        // Honeypot
+        public string? Honeypot { get; set; }
+    }
+
+    public record ClassRow(
+        string Day,
+        int StartHour, int StartMin,
+        int EndHour, int EndMin,
+        string Studio, string Style, string Level, string AgeGroup, string Teacher
+    )
+    {
+        public string Id => $"{Day}-{StartHour:D2}{StartMin:D2}-{Style}-{Level}-{AgeGroup}".Replace(" ", "");
+        public TimeSpan Start => new(StartHour, StartMin, 0);
+        public TimeSpan End => new(EndHour, EndMin, 0);
+        public string PrettyTime => $"{Day} {StartHour:D2}:{StartMin:D2}-{EndHour:D2}:{EndMin:D2}";
+    }
+}

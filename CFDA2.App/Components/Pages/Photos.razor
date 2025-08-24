@@ -1,0 +1,129 @@
+﻿@page "/photos"
+@rendermode InteractiveServer
+
+<section class="content-surface">
+    <h1 class="display-hero">Photos</h1>
+    <p class="lede">A peek at classes, recitals, and studio life. Use the tags to filter by style, or search by title or tag.</p>
+
+    <!-- Filters -->
+    <div class="photo-filters">
+        <div class="tag-row">
+            @foreach (var cat in Categories)
+            {
+                var active = SelectedCats.Contains(cat);
+                <button type="button"
+                        class="tag-toggle @(active ? "active" : "")"
+                        @onclick="@(() => ToggleCat(cat))">
+                    @cat
+                </button>
+            }
+        </div>
+
+        <div class="filters-right">
+            <input type="search"
+                   placeholder="Search title or tag..."
+                   @bind-value="query"
+                   @bind-value:event="oninput" />
+            <button class="btn btn-outline" @onclick="ClearFilters">Reset</button>
+        </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid-photos">
+        @foreach (var p in Filtered)
+        {
+            <figure class="photo-card">
+                <a href="@p.Url" target="_blank" rel="noopener">
+                    <img src="@p.Url" alt="@p.Title" loading="lazy" />
+                </a>
+                <figcaption class="photo-meta">
+                    <div class="title">@p.Title</div>
+                    <div class="meta">
+                        <span class="tag @StyleTag(p.Category)">@p.Category</span>
+                        @if (p.Tags?.Any() == true)
+                        {
+                            foreach (var t in p.Tags.Take(3))
+                            {
+                                <span class="tag">#@t</span>
+                            }
+                        }
+                    </div>
+                </figcaption>
+            </figure>
+        }
+
+        @if (!Filtered.Any())
+        {
+            <div class="no-results">
+                <p>No photos match those filters. Try clearing a few tags or your search.</p>
+                <button class="btn btn-outline" @onclick="ClearFilters">Reset filters</button>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    // Data model
+    public sealed record PhotoItem(string Url, string Title, string Category, string[] Tags);
+
+    // Categories used for filtering
+    string[] Categories = new[]
+    {
+        "Ballet","Tap","Jazz","Hip-Hop","Acro","Preschool","Studio Life","Competition"
+    };
+
+    // Replace these with your own images when ready
+    List<PhotoItem> All = new()
+    {
+        // Using picsum for placeholders. Swap to @Assets["img/..."] when you add real files.
+        new("https://picsum.photos/seed/cfda2-ballet-1/900/600", "Center Practice", "Ballet",     new[]{"turns","barre"}),
+        new("https://picsum.photos/seed/cfda2-ballet-2/900/600", "2024 Recital",   "Ballet",     new[]{"recital"}),
+        new("https://picsum.photos/seed/cfda2-tap-1/900/600",    "Tap",      "Tap",        new[]{"shuffle","kids"}),
+        new("https://picsum.photos/seed/cfda2-jazz-1/900/600",   "Jazz",      "Jazz",       new[]{"combo"}),
+        new("https://picsum.photos/seed/cfda2-hiphop-1/900/600", "Hip-Hop",    "Hip-Hop",    new[]{"team"}),
+        new("https://picsum.photos/seed/cfda2-acro-1/900/600",   "Acro Basics",     "Acro",       new[]{"strength"}),
+        new("https://picsum.photos/seed/cfda2-pre-1/900/600",    "Preschool Fun",   "Preschool",  new[]{"tiny"}),
+        new("https://picsum.photos/seed/cfda2-life-1/900/600",   "Studio",   "Studio Life",new[]{"family"}),
+        new("https://picsum.photos/seed/cfda2-comp-1/900/600",   "Awards",    "Competition",new[]{"trophies"}),
+        new("https://picsum.photos/seed/cfda2-hiphop-2/900/600", "Freestyle",       "Hip-Hop",    new[]{"teen"}),
+        new("https://picsum.photos/seed/cfda2-acro-2/900/600",   "Handsprings",     "Acro",       new[]{"advanced"}),
+        new("https://picsum.photos/seed/cfda2-life-2/900/600",   "Team",   "Studio Life",new[]{"community"})
+    };
+
+    // Filter state
+    HashSet<string> SelectedCats = new();
+    string query = "";
+
+    IEnumerable<PhotoItem> Filtered => All
+        .Where(p => SelectedCats.Count == 0 || SelectedCats.Contains(p.Category))
+        .Where(p =>
+            string.IsNullOrWhiteSpace(query)
+            || p.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || p.Category.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || (p.Tags?.Any(t => t.Contains(query, StringComparison.OrdinalIgnoreCase)) ?? false))
+        .ToList();
+
+    void ToggleCat(string cat)
+    {
+        if (!SelectedCats.Add(cat))
+            SelectedCats.Remove(cat);
+    }
+
+    void ClearFilters()
+    {
+        SelectedCats.Clear();
+        query = string.Empty;
+    }
+
+    // Reuse tag colors from schedule page
+    string StyleTag(string style) => style switch
+    {
+        "Ballet" => "tag tag--ballet",
+        "Tap" => "tag tag--tap",
+        "Jazz" => "tag tag--jazz",
+        "Hip-Hop" => "tag tag--hiphop",
+        "Acro" => "tag tag--acro",
+        "Preschool" => "tag tag--preschool",
+        _ => "tag"
+    };
+}

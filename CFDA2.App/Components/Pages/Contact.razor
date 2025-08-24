@@ -1,0 +1,170 @@
+﻿@page "/contact"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+
+<section class="content-surface contact-layout">
+    <div class="contact-left">
+        <EditForm Model="@form" OnValidSubmit="@SubmitAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Parent or Guardian Name *</label>
+                    <InputText @bind-Value="form.Name" />
+                    <ValidationMessage For="() => form.Name" />
+                </div>
+                <div class="field">
+                    <label>Email *</label>
+                    <InputText @bind-Value="form.Email" />
+                    <ValidationMessage For="() => form.Email" />
+                </div>
+                <div class="field">
+                    <label>Phone *</label>
+                    <InputText @bind-Value="form.Phone" />
+                    <ValidationMessage For="() => form.Phone" />
+                </div>
+                <div class="field">
+                    <label>Subject</label>
+                    <InputSelect @bind-Value="form.Subject">
+                        @foreach (var s in Subjects)
+                        {
+                            <option value="@s">@s</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="field full">
+                    <label>Your Message *</label>
+                    <InputTextArea @bind-Value="form.Message" rows="5" />
+                    <ValidationMessage For="() => form.Message" />
+                </div>
+
+                <div class="field">
+                    <label>Preferred Contact</label>
+                    <InputSelect @bind-Value="form.PreferredContact">
+                        <option>Email</option>
+                        <option>Phone</option>
+                        <option>Either</option>
+                    </InputSelect>
+                </div>
+                <div class="field">
+                    <label>Best Time</label>
+                    <InputSelect @bind-Value="form.BestTime">
+                        <option>Morning</option>
+                        <option>Afternoon</option>
+                        <option>Evening</option>
+                        <option>Anytime</option>
+                    </InputSelect>
+                </div>
+
+                <!-- Honeypot anti-spam. Keep hidden. -->
+                <input class="hp" autocomplete="off" @bind="form.Honeypot" />
+
+                <div class="actions-row">
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </div>
+            </div>
+        </EditForm>
+
+        @if (!string.IsNullOrWhiteSpace(confirmationId))
+        {
+            <div class="content-surface contact-success" aria-live="polite">
+                <h3>Thanks! Your message was sent.</h3>
+                <p>Confirmation ID: <strong>@confirmationId</strong></p>
+                <p>We will reach out soon.</p>
+            </div>
+        }
+    </div>
+
+    <aside class="contact-right">
+        <div class="map-card">
+            <iframe title="Map to CFDA II"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src="https://www.google.com/maps?q=74+Park+Place,+Winsted,+CT+06098&output=embed">
+            </iframe>
+        </div>
+
+        <div class="hours-card">
+            <h4>Studio Hours</h4>
+            <ul class="hours-list">
+                <li><span>Mon</span><span>3:30 pm - 8:00 pm</span></li>
+                <li><span>Tue</span><span>3:30 pm - 8:00 pm</span></li>
+                <li><span>Wed</span><span>3:30 pm - 8:00 pm</span></li>
+                <li><span>Thu</span><span>3:30 pm - 8:00 pm</span></li>
+                <li><span>Fri</span><span>By appointment</span></li>
+                <li><span>Sat</span><span>Seasonal</span></li>
+                <li><span>Sun</span><span>Closed</span></li>
+            </ul>
+            <p class="muted">Hours vary by season and schedule. Call or email to confirm.</p>
+        </div>
+    </aside>
+</section>
+
+<section class="content-surface contact-intro">
+    <h1 class="display-hero">Contact Us</h1>
+    <p class="lede">
+        Have a question about classes, placement, or registration? Send us a note and our team will get back to you.
+    </p>
+
+    <div class="contact-cards">
+        <div class="contact-card">
+            <h4>Visit</h4>
+            <p>74 Park Place<br />Winsted, CT 06098</p>
+            <a class="btn btn-outline" href="https://www.google.com/maps?q=74+Park+Place,+Winsted,+CT+06098" target="_blank" rel="noopener">Open in Maps</a>
+        </div>
+        <div class="contact-card">
+            <h4>Call</h4>
+            <p><a href="tel:+18603799755">(860) 379-9755</a></p>
+        </div>
+        <div class="contact-card">
+            <h4>Email</h4>
+            <p><a href="mailto:info@cfda2.com">info@cfda2.com</a></p>
+        </div>
+    </div>
+</section>
+
+@code {
+    // Keep comments ASCII only per your preference.
+
+    private ContactForm form = new();
+    private string confirmationId = string.Empty;
+
+    private readonly string[] Subjects = new[]
+    {
+        "Class placement",
+        "Registration",
+        "Schedule",
+        "Tuition and billing",
+        "General question"
+    };
+
+    private async Task SubmitAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(form.Honeypot))
+            return; // spam
+
+        // Simulate send success. Replace with API call when ready.
+        await Task.Delay(200);
+        confirmationId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+
+        // Optionally reset the form:
+        // form = new ContactForm();
+    }
+
+    public class ContactForm
+    {
+        [Required] public string Name { get; set; } = string.Empty;
+        [Required, EmailAddress] public string Email { get; set; } = string.Empty;
+        [Required] public string Phone { get; set; } = string.Empty;
+
+        public string Subject { get; set; } = "General question";
+        [Required] public string Message { get; set; } = string.Empty;
+
+        public string PreferredContact { get; set; } = "Either";
+        public string BestTime { get; set; } = "Anytime";
+
+        // Honeypot
+        public string? Honeypot { get; set; }
+    }
+}

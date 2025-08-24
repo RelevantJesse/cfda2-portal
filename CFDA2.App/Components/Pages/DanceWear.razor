@@ -1,0 +1,245 @@
+﻿@page "/dance-wear"
+@rendermode InteractiveServer
+
+<section class="content-surface wear-intro">
+    <h1 class="display-hero">Dance Wear & Dress Code</h1>
+    <p class="lede">
+        Proper shoes and attire help dancers move safely and learn with confidence.
+        Use the dress code below and the basics grid to get ready for class.
+    </p>
+
+    <div class="wear-links">
+        <a class="btn btn-outline" href="/registration">Register for Classes</a>
+        <a class="btn btn-primary" href="/contact">Questions? Contact the Studio</a>
+    </div>
+</section>
+
+<section class="content-surface wear-layout">
+    <div class="dress-col">
+        <h2>Dress Code by Class</h2>
+
+        <!-- Simple, accessible toggles using details/summary -->
+        <details class="dc-item" open>
+            <summary><span class="chip chip--preschool">Preschool</span> Ages 3-5</summary>
+            <ul class="dc-list">
+                <li>Comfortable leotard or fitted top with tights or leggings.</li>
+                <li>Optional skirt or shorts. Hair secured away from face.</li>
+                <li>Soft ballet slippers recommended.</li>
+            </ul>
+        </details>
+
+        <details class="dc-item">
+            <summary><span class="chip chip--ballet">Ballet</span></summary>
+            <ul class="dc-list">
+                <li>Solid leotard and pink or skin-tone tights. Hair in a bun if possible.</li>
+                <li>Canvas or leather ballet slippers that fit snugly.</li>
+                <li>Warm-ups allowed at the start of class only.</li>
+            </ul>
+        </details>
+
+        <details class="dc-item">
+            <summary><span class="chip chip--tap">Tap</span></summary>
+            <ul class="dc-list">
+                <li>Fitted top with leggings or dance pants. No loose shorts.</li>
+                <li>Tap shoes with secured laces or buckles.</li>
+                <li>Hair secured; no jewelry that can swing.</li>
+            </ul>
+        </details>
+
+        <details class="dc-item">
+            <summary><span class="chip chip--jazz">Jazz</span></summary>
+            <ul class="dc-list">
+                <li>Fitted top or leotard with leggings or shorts.</li>
+                <li>Jazz shoes or turners as assigned by level.</li>
+                <li>Bring knee pads if recommended for choreography.</li>
+            </ul>
+        </details>
+
+        <details class="dc-item">
+            <summary><span class="chip chip--hiphop">Hip-Hop</span></summary>
+            <ul class="dc-list">
+                <li>Clean, non-marking sneakers used only in studio.</li>
+                <li>Comfortable athletic wear; no jeans.</li>
+                <li>Hair secured; jewelry removed.</li>
+            </ul>
+        </details>
+
+        <details class="dc-item">
+            <summary><span class="chip chip--acro">Acro</span></summary>
+            <ul class="dc-list">
+                <li>Fitted leotard or unitard. Leggings or shorts are fine.</li>
+                <li>Bare feet. Hair secured in low bun or braid.</li>
+                <li>No loose clothing for spotting and safety.</li>
+            </ul>
+        </details>
+
+        <div class="tip">
+            <strong>Tip:</strong> Label shoes and bags with your dancer name.
+        </div>
+    </div>
+
+    <div class="products-col">
+        <div class="wear-filters">
+            <div class="chip-row">
+                @foreach (var cat in Categories)
+                {
+                    var active = SelectedCats.Contains(cat);
+                    <button type="button"
+                            class="chip-toggle @(active ? "active" : "")"
+                            @onclick="@(() => ToggleCat(cat))">
+                        @cat
+                    </button>
+                }
+            </div>
+            <div class="filters-right">
+                <input type="search"
+                       placeholder="Search item or note..."
+                       @bind-value="query"
+                       @bind-value:event="oninput" />
+                <button class="btn btn-outline" @onclick="ClearFilters">Reset</button>
+            </div>
+        </div>
+
+        <div class="grid-products">
+            @foreach (var p in Filtered)
+            {
+                var picked = Picks.Contains(p.Id);
+                <article class="product-card">
+                    <img src="@p.ImageUrl" alt="@p.Title" loading="lazy" />
+                    <div class="pc-body">
+                        <div class="pc-top">
+                            <h3 class="pc-title">@p.Title</h3>
+                            <span class="chip @StyleChip(p.Category)">@p.Category</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(p.Notes))
+                        {
+                            <p class="pc-notes">@p.Notes</p>
+                        }
+                        <div class="pc-actions">
+                            <button class="btn @(picked ? "btn-primary" : "btn-outline")"
+                                    @onclick="@(() => TogglePick(p.Id))">
+                                @(picked ? "Added to Checklist" : "Add to Checklist")
+                            </button>
+                            @if (!string.IsNullOrWhiteSpace(p.Link))
+                            {
+                                <a class="btn btn-glass" href="@p.Link" target="_blank" rel="noopener">View</a>
+                            }
+                        </div>
+                    </div>
+                </article>
+            }
+
+            @if (!Filtered.Any())
+            {
+                <div class="no-results">
+                    <p>No items match those filters.</p>
+                </div>
+            }
+        </div>
+
+        <aside class="checklist" aria-live="polite">
+            <h4>Your Checklist (@Picks.Count)</h4>
+            @if (Picks.Count == 0)
+            {
+                <p class="muted">Use "Add to Checklist" on items you need.</p>
+            }
+            else
+            {
+                <ul class="checklist-items">
+                    @foreach (var id in Picks)
+                    {
+                        var it = All.FirstOrDefault(x => x.Id == id);
+                        if (it is not null)
+                        {
+                            <li>
+                                <input type="checkbox" checked />
+                                <span>@it.Title</span>
+                                <em class="mini">@it.Category</em>
+                                <button class="link" @onclick="@(() => RemovePick(id))">Remove</button>
+                            </li>
+                        }
+                    }
+                </ul>
+                <div class="check-actions">
+                    <button class="btn btn-outline" @onclick="ClearPicks">Clear</button>
+                    <a class="btn btn-primary" href="/registration">Ready to Register</a>
+                </div>
+            }
+        </aside>
+    </div>
+</section>
+
+@code {
+    // Data model
+    public sealed record WearItem(
+        string Id, string Title, string Category, string ImageUrl, string? Notes, string? Link
+    );
+
+    // Filters
+    HashSet<string> SelectedCats = new();
+    string query = string.Empty;
+
+    // Simple checklist
+    HashSet<string> Picks = new();
+
+    // Categories for chips
+    string[] Categories = new[] { "Ballet", "Tap", "Jazz", "Hip-Hop", "Acro", "Preschool", "Bags", "Accessories" };
+
+    // Sample catalog; replace ImageUrl/Link with your assets when ready
+    List<WearItem> All = new()
+    {
+        new("ballet-slippers","Canvas Ballet Slippers","Ballet","https://picsum.photos/seed/cfda2-w1/600/400","Snug fit, drawstring tucked.",""),
+        new("leotard-basic","Classic Leotard","Ballet","https://picsum.photos/seed/cfda2-w2/600/400","Solid color. Pair with tights.",""),
+        new("tights","Convertible Tights","Ballet","https://picsum.photos/seed/cfda2-w3/600/400","Pink or skin-tone.",""),
+        new("tap-shoes","Tap Shoes","Tap","https://picsum.photos/seed/cfda2-w4/600/400","Laces or buckles. Secure fit.",""),
+        new("jazz-shoes","Jazz Shoes","Jazz","https://picsum.photos/seed/cfda2-w5/600/400","Black or tan per level.",""),
+        new("turners","Foot Undies / Turners","Jazz","https://picsum.photos/seed/cfda2-w6/600/400","If assigned.",""),
+        new("hiphop-sneakers","Clean Studio Sneakers","Hip-Hop","https://picsum.photos/seed/cfda2-w7/600/400","Used only in studio.",""),
+        new("acro-unitard","Unitard or Leotard","Acro","https://picsum.photos/seed/cfda2-w8/600/400","Fitted for spotting safety.",""),
+        new("pre-skirt","Pull-on Skirt","Preschool","https://picsum.photos/seed/cfda2-w9/600/400","Optional and fun.",""),
+        new("bag","Dance Bag","Bags","https://picsum.photos/seed/cfda2-w10/600/400","Label with dancer name.",""),
+        new("hair-kit","Hair Kit","Accessories","https://picsum.photos/seed/cfda2-w11/600/400","Elastics, bobby pins, hairspray.",""),
+        new("water","Water Bottle","Accessories","https://picsum.photos/seed/cfda2-w12/600/400","Spill-proof.","")
+    };
+
+    IEnumerable<WearItem> Filtered => All
+        .Where(p => SelectedCats.Count == 0 || SelectedCats.Contains(p.Category))
+        .Where(p =>
+            string.IsNullOrWhiteSpace(query)
+            || p.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || p.Category.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || (p.Notes?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false))
+        .ToList();
+
+    void ToggleCat(string cat)
+    {
+        if (!SelectedCats.Add(cat))
+            SelectedCats.Remove(cat);
+    }
+
+    void ClearFilters()
+    {
+        SelectedCats.Clear();
+        query = string.Empty;
+    }
+
+    void TogglePick(string id)
+    {
+        if (!Picks.Add(id))
+            Picks.Remove(id);
+    }
+
+    void RemovePick(string id) => Picks.Remove(id);
+    void ClearPicks() => Picks.Clear();
+
+    string StyleChip(string style) => style switch
+    {
+        "Ballet" => "chip chip--ballet",
+        "Tap" => "chip chip--tap",
+        "Jazz" => "chip chip--jazz",
+        "Hip-Hop" => "chip chip--hiphop",
+        "Acro" => "chip chip--acro",
+        "Preschool" => "chip chip--preschool",
+        _ => "chip"
+    };
+}

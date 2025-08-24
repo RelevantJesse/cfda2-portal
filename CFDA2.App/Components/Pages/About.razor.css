@@ -1,0 +1,106 @@
+﻿/* About page layout bits */
+.about-intro {
+    display: grid;
+    gap: .75rem;
+}
+
+.about-pills {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+
+.about-two-col {
+    display: grid;
+    grid-template-columns: 1.1fr .9fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+.about-figure img {
+    width: 100%;
+    height: auto;
+    border-radius: 14px;
+    box-shadow: var(--elev-1);
+}
+
+.about-figure figcaption {
+    color: var(--ink-600);
+    font-size: .9rem;
+    margin-top: .35rem;
+}
+
+.feature-list {
+    margin: .5rem 0 1rem 1.1rem;
+}
+
+    .feature-list li {
+        margin: .25rem 0;
+    }
+
+/* Staff grid */
+.staff-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .9rem;
+}
+
+.staff-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,.05);
+    box-shadow: 0 10px 26px rgba(17,12,24,.08);
+    padding: .9rem;
+    display: grid;
+    gap: .4rem;
+    text-align: left;
+}
+
+    .staff-card img {
+        width: 100%;
+        height: 240px;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+
+    .staff-card .role {
+        color: var(--brand-700);
+        font-weight: 700;
+        margin: 0;
+    }
+
+/* Visit cards */
+.visit-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .75rem;
+    margin-top: .5rem;
+}
+
+.visit-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,.06);
+    padding: .8rem 1rem;
+}
+
+/* Responsive tweaks */
+@media (max-width: 980px) {
+    .about-two-col {
+        grid-template-columns: 1fr;
+    }
+
+    .staff-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 560px) {
+    .staff-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .visit-grid {
+        grid-template-columns: 1fr;
+    }
+}

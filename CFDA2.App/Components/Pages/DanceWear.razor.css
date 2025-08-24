@@ -1,0 +1,255 @@
+﻿/* Dance Wear page */
+.wear-intro {
+    display: grid;
+    gap: .6rem
+}
+
+.wear-links {
+    display: flex;
+    gap: .6rem;
+    flex-wrap: wrap
+}
+
+/* Two-column layout: dress code + products */
+.wear-layout {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr 1.3fr;
+}
+
+/* Dress code accordion */
+.dc-item {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 14px;
+    padding: .5rem .75rem;
+    margin: .55rem 0;
+    box-shadow: var(--elev-1);
+}
+
+    .dc-item > summary {
+        cursor: pointer;
+        list-style: none;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-weight: 800;
+    }
+
+        .dc-item > summary::-webkit-details-marker {
+            display: none
+        }
+
+.dc-list {
+    margin: .5rem 0 .25rem 1rem
+}
+
+.tip {
+    margin-top: .5rem;
+    color: var(--ink-600)
+}
+
+/* Filters and grid */
+.wear-filters {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: .6rem;
+}
+
+    .wear-filters .filters-right {
+        display: flex;
+        gap: .5rem;
+        align-items: center
+    }
+
+    .wear-filters input[type="search"] {
+        border: 1px solid rgba(0,0,0,.12);
+        border-radius: 10px;
+        padding: .5rem .6rem;
+        background: #fff;
+    }
+
+.chip-row {
+    display: flex;
+    gap: .4rem;
+    flex-wrap: wrap
+}
+
+.chip-toggle {
+    padding: .35rem .7rem;
+    border-radius: 999px;
+    border: 1px solid rgba(122,51,105,.28);
+    background: #fff;
+    color: var(--brand-700);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, transform .05s;
+}
+
+    .chip-toggle:hover {
+        background: var(--brand-100)
+    }
+
+    .chip-toggle.active {
+        background: var(--brand-500);
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 8px 18px rgba(166,77,132,.22)
+    }
+
+/* Product cards */
+.grid-products {
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.product-card {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--elev-1);
+    display: grid;
+    grid-template-rows: auto 1fr;
+}
+
+    .product-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        display: block
+    }
+
+.pc-body {
+    padding: .7rem .8rem;
+    display: grid;
+    gap: .45rem
+}
+
+.pc-top {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    justify-content: space-between
+}
+
+.pc-title {
+    font-size: 1rem;
+    margin: 0;
+    font-weight: 800
+}
+
+.pc-notes {
+    color: var(--ink-600);
+    margin: .1rem 0 .35rem
+}
+
+.pc-actions {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap
+}
+
+/* Checklist */
+.checklist {
+    position: sticky;
+    bottom: 1rem;
+    margin-top: 1rem;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 14px;
+    box-shadow: var(--elev-1);
+    padding: .75rem .9rem;
+}
+
+    .checklist h4 {
+        margin: 0 0 .35rem 0
+    }
+
+    .checklist .muted {
+        color: var(--ink-600)
+    }
+
+.checklist-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: .35rem
+}
+
+    .checklist-items li {
+        display: grid;
+        grid-template-columns: auto 1fr auto auto;
+        gap: .4rem;
+        align-items: center
+    }
+
+    .checklist-items .mini {
+        color: var(--ink-600);
+        font-size: .85rem
+    }
+
+.checklist .link {
+    background: none;
+    border: none;
+    color: var(--brand-700);
+    text-decoration: underline;
+    cursor: pointer;
+    padding: .15rem .25rem
+}
+
+.check-actions {
+    display: flex;
+    gap: .5rem;
+    justify-content: flex-end;
+    margin-top: .5rem
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+    .wear-layout {
+        grid-template-columns: 1fr
+    }
+
+    .checklist {
+        position: static
+    }
+}
+
+/* Dress Code: show a chevron on each summary, rotate on open */
+.dc-item > summary {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+    .dc-item > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    /* Collapsed state: right-pointing chevron made from borders */
+    .dc-item > summary::before {
+        content: "";
+        display: inline-block;
+        width: .6rem;
+        height: .6rem;
+        margin-right: .35rem;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(-45deg);
+        transition: transform .2s ease;
+    }
+
+/* Open state: rotate to point down */
+.dc-item[open] > summary::before {
+    transform: rotate(45deg);
+}

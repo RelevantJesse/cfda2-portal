@@ -1,0 +1,234 @@
+﻿/* Registration layout */
+.reg-shell {
+    display: grid;
+    gap: .9rem;
+}
+
+.reg-header {
+    display: grid;
+    gap: .4rem;
+}
+
+/* Stepper */
+.stepper {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: .4rem;
+}
+
+    .stepper .step {
+        background: #fff;
+        border: 1px solid rgba(0,0,0,.06);
+        border-radius: 999px;
+        padding: .35rem .6rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        color: var(--ink-600);
+    }
+
+        .stepper .step span {
+            display: inline-grid;
+            place-items: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            background: var(--brand-100);
+            color: var(--brand-900);
+            font-weight: 700;
+            font-size: .85rem;
+        }
+
+        .stepper .step.current {
+            border-color: var(--brand-500);
+            color: var(--brand-900);
+            box-shadow: 0 6px 16px rgba(90,40,80,.08);
+        }
+
+        .stepper .step.done {
+            opacity: .75;
+        }
+
+/* Form */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .9rem;
+}
+
+.cardish {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 14px;
+    padding: .9rem;
+    box-shadow: var(--elev-1);
+}
+
+    .cardish legend {
+        font-weight: 800;
+        padding: 0 .25rem;
+    }
+
+.field {
+    display: grid;
+    gap: .25rem;
+}
+
+    .field.full {
+        grid-column: 1 / -1;
+    }
+
+    .field label {
+        font-size: .9rem;
+        color: var(--ink-600);
+    }
+
+    .field input, .field select, .field textarea {
+        border: 1px solid rgba(0,0,0,.12);
+        border-radius: 10px;
+        padding: .5rem .6rem;
+        background: #fff;
+    }
+
+.checks {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+
+    .checks.vertical {
+        flex-direction: column;
+        gap: .35rem;
+    }
+
+.check {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+.hp {
+    display: none;
+}
+/* honeypot */
+
+.actions-row {
+    display: flex;
+    gap: .6rem;
+    justify-content: flex-end;
+    margin-top: .5rem;
+}
+
+    .actions-row.spread {
+        justify-content: space-between;
+    }
+
+/* Class picker (step 2) */
+.filters.compact {
+    margin-top: .25rem;
+}
+
+.class-picker {
+    display: grid;
+    gap: .35rem;
+}
+
+.class-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: .5rem;
+    align-items: center;
+    padding: .5rem .6rem;
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: var(--elev-1);
+}
+
+    .class-row .when {
+        color: var(--ink-600);
+        font-size: .95rem;
+    }
+
+    .class-row .what {
+        font-weight: 600;
+    }
+
+    .class-row .where {
+        color: var(--ink-600);
+        font-size: .9rem;
+    }
+
+.warn {
+    border-color: #ffd166;
+}
+
+.success {
+    border-color: #46c38c;
+}
+
+.review.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .9rem;
+}
+
+.selected-list {
+    margin: .25rem 0 0 1rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .review.two-col {
+        grid-template-columns: 1fr;
+    }
+
+    .class-row {
+        grid-template-columns: auto 1fr;
+    }
+}
+
+.age-scope {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin: .35rem 0 .5rem 0;
+    color: var(--ink-600);
+}
+
+    .age-scope .chip {
+        font-size: .8rem;
+    }
+
+    .age-scope .age {
+        opacity: .8;
+    }
+
+    .age-scope .ml {
+        margin-left: .75rem;
+    }
+
+.age-note {
+    margin: .25rem 0 .5rem 0;
+    color: var(--ink-600);
+}
+
+.interest-scope {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin: .25rem 0 .5rem 0;
+    color: var(--ink-600);
+}
+
+    .interest-scope .chip {
+        font-size: .8rem;
+    }
+
+    .interest-scope .ml {
+        margin-left: .75rem;
+    }

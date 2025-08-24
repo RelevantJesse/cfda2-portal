@@ -1,0 +1,78 @@
+﻿@inherits LayoutComponentBase
+
+@code {
+    private bool _navOpen = false;
+    private void ToggleNav() => _navOpen = !_navOpen;
+}
+
+<div class="app-shell">
+    <!-- Top App Bar -->
+    <header class="app-bar">
+        <a class="brand" href="/">
+            <img class="brand-logo"
+                 src='@Assets["img/logo-dancer.png"]'
+                 alt="Center for Dance Arts II logo" />
+            <span class="brand-text">Center for Dance Arts II</span>
+        </a>
+
+        <!-- Right-aligned header CTAs -->
+        <nav class="app-actions app-ctas">
+            <a class="btn btn-glass" href="/schedule" title="View Class Schedule">View Schedule</a>
+            <a class="btn btn-primary" href="/registration" title="Register Now">Register Now</a>
+        </nav>
+    </header>
+
+    <div class="header-rainbow" aria-hidden="true"></div>
+
+    <nav class="top-nav">
+        <div class="top-nav-inner">
+            <NavMenu />  @* left side nav *@
+
+            <div class="nav-cta">
+                <a class="btn btn-portal"
+                   href="/parent-portal">
+                    Parent Portal
+                </a>
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- Promo band (from earlier step) -->
+    <div class="promo" role="region" aria-label="Studio offers">
+        <div class="promo-inner">
+            <div class="promo-left">
+                <strong class="tag">New Student Special</strong>
+                <span class="offer">Two 45-minute lessons for $60</span>
+                <span class="divider">•</span>
+                <a class="phone" href="tel:+18603799755">(860) 379-9755</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="app-body no-sidebar">
+        <main class="content-wrap" id="main-content" tabindex="-1">
+            <article class="content-surface">
+                @Body
+            </article>
+
+            <div class="wave-sep" aria-hidden="true">
+                <svg viewBox="0 0 1440 80" preserveAspectRatio="none" focusable="false">
+                    <path d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z"></path>
+                </svg>
+            </div>
+
+            <footer class="app-footer">
+                <span>© @DateTime.Now.Year CFDA2</span>
+            </footer>
+        </main>
+    </div>
+</div>
+
+<!-- Error UI -->
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

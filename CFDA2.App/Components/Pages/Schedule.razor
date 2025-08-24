@@ -1,0 +1,235 @@
+﻿@page "/schedule"
+@rendermode InteractiveServer
+@using System.Text
+
+<section class="content-surface">
+    <h1 class="display-hero">Class Schedule</h1>
+    <p class="lede">Browse by day, style, and level. Ready to join? <a href="/registration">Register online</a> anytime.</p>
+
+    <!-- Filters -->
+    <div class="filters">
+        <div class="filters-row">
+            <label>
+                <span>Day</span>
+                <select @bind="selectedDay">
+                    @foreach (var d in DayOptions)
+                    {
+                        <option value="@d">@d</option>
+                    }
+                </select>
+            </label>
+
+            <label>
+                <span>Style</span>
+                <select @bind="selectedStyle">
+                    @foreach (var s in StyleOptions)
+                    {
+                        <option value="@s">@s</option>
+                    }
+                </select>
+            </label>
+
+            <label>
+                <span>Age</span>
+                <select @bind="selectedAge">
+                    @foreach (var a in AgeOptions)
+                    {
+                        <option value="@a">@a</option>
+                    }
+                </select>
+            </label>
+
+            <label>
+                <span>Level</span>
+                <select @bind="selectedLevel">
+                    @foreach (var l in LevelOptions)
+                    {
+                        <option value="@l">@l</option>
+                    }
+                </select>
+            </label>
+
+            <label class="grow">
+                <span>Search</span>
+                <input type="search"
+                       placeholder="Try “ballet” or a teacher…"
+                       @bind-value="query"
+                       @bind-value:event="oninput" />
+            </label>
+
+
+            <button class="btn btn-outline" @onclick="ResetFilters" title="Clear all filters">Reset</button>
+        </div>
+    </div>
+
+    <!-- Results meta -->
+    <div class="results-meta">
+        <span>@Filtered.Count() classes</span>
+        <div class="legend">
+            <span class="chip chip--ballet">Ballet</span>
+            <span class="chip chip--tap">Tap</span>
+            <span class="chip chip--jazz">Jazz</span>
+            <span class="chip chip--hiphop">Hip-Hop</span>
+            <span class="chip chip--acro">Acro</span>
+            <span class="chip chip--preschool">Preschool</span>
+        </div>
+    </div>
+
+    <!-- Schedule table (becomes cards on mobile) -->
+    <div class="schedule">
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Class</th>
+                    <th>Level</th>
+                    <th>Age</th>
+                    <th>Studio</th>
+                    <th>Teacher</th>
+                    <th class="actions-col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in SortedFiltered)
+                {
+                    <tr>
+                        <td data-label="Day">@c.Day</td>
+                        <td data-label="Time">@FormatTime(c.Start)–@FormatTime(c.End)</td>
+                        <td data-label="Class">
+                            <span class="chip @StyleChip(c.Style)">@c.Style</span>
+                        </td>
+                        <td data-label="Level">@c.Level</td>
+                        <td data-label="Age">@c.AgeGroup</td>
+                        <td data-label="Studio">@c.Studio</td>
+                        <td data-label="Teacher">@c.Teacher</td>
+                        <td data-label="Action" class="actions">
+                            <a class="btn btn-primary" href="/registration">Register</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (!SortedFiltered.Any())
+        {
+            <div class="no-results">
+                <p>No classes match those filters. Try widening your search.</p>
+                <button class="btn btn-outline" @onclick="ResetFilters">Reset filters</button>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    // ---- Filter state
+    string selectedDay = "All Days";
+    string selectedStyle = "All Styles";
+    string selectedAge = "All Ages";
+    string selectedLevel = "All Levels";
+    string query = string.Empty;
+
+    readonly string[] DayOptions = ["All Days", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    readonly string[] StyleOptions = ["All Styles", "Ballet", "Tap", "Jazz", "Hip-Hop", "Acro", "Preschool"];
+    readonly string[] AgeOptions = ["All Ages", "Preschool (3–5)", "Kids (6–9)", "Pre-Teen (10–12)", "Teen (13–17)", "Adult"];
+    readonly string[] LevelOptions = ["All Levels", "Beginner", "Intermediate", "Advanced", "Open"];
+
+    // ---- Sample dataset (replace with your own later)
+    readonly List<ClassItem> AllClasses = new()
+    {
+        new("Monday",    16,30, 17,15, "Studio A", "Ballet",   "Beginner",     "Kids (6–9)",      "Miss Lisa"),
+        new("Monday",    17,30, 18,30, "Studio A", "Tap",      "Intermediate", "Pre-Teen (10–12)","Miss Meghan"),
+        new("Monday",    18,30, 19,30, "Studio B", "Jazz",     "Open",         "Teen (13–17)",    "Miss Meghan"),
+        new("Tuesday",   16,00, 16,45, "Studio B", "Preschool","Beginner",     "Preschool (3–5)", "Miss Mikki"),
+        new("Tuesday",   17,00, 18,00, "Studio A", "Hip-Hop",  "Open",         "Kids (6–9)",      "Miss Mikki"),
+        new("Tuesday",   18,15, 19,15, "Studio A", "Hip-Hop",  "Intermediate", "Teen (13–17)",    "Miss Mikki"),
+        new("Wednesday", 16,30, 17,30, "Studio A", "Acro",     "Beginner",     "Kids (6–9)",      "Miss Elizabeth"),
+        new("Wednesday", 17,45, 18,45, "Studio A", "Acro",     "Intermediate", "Pre-Teen (10–12)","Miss Elizabeth"),
+        new("Thursday",  16,30, 17,30, "Studio B", "Ballet",   "Beginner",     "Kids (6–9)",      "Miss Lisa"),
+        new("Thursday",  17,45, 18,45, "Studio B", "Ballet",   "Intermediate", "Pre-Teen (10–12)","Miss Lisa"),
+        new("Friday",    17,00, 18,00, "Studio A", "Tap",      "Beginner",     "Kids (6–9)",      "Miss Meghan"),
+        new("Saturday",  09,30, 10,15, "Studio A", "Preschool","Beginner",     "Preschool (3–5)", "Miss Mikki"),
+        new("Saturday",  10,30, 11,30, "Studio A", "Jazz",     "Open",         "Kids (6–9)",      "Miss Meghan"),
+        new("Saturday",  11,45, 12,45, "Studio B", "Hip-Hop",  "Advanced",     "Teen (13–17)",    "Miss Mikki"),
+    };
+
+    static string Key(string? s)
+    => new string((s ?? "")
+        .Trim()
+        .ToLowerInvariant()
+        .Normalize(NormalizationForm.FormKD)
+        .Where(char.IsLetterOrDigit) // strips spaces, punctuation, en-dash vs hyphen, accents
+        .ToArray());
+
+    static bool Matches(string value, string selected)
+        => selected.StartsWith("All", StringComparison.OrdinalIgnoreCase) || Key(value) == Key(selected);
+
+
+    // ---- Filtering
+    IEnumerable<ClassItem> Filtered => AllClasses.Where(c =>
+        Matches(c.Day, selectedDay) &&
+        Matches(c.Style, selectedStyle) &&
+        Matches(c.AgeGroup, selectedAge) &&
+        Matches(c.Level, selectedLevel) &&
+        (string.IsNullOrWhiteSpace(query) ||
+            c.Style.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            c.Teacher.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            c.Level.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            c.AgeGroup.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            c.Studio.Contains(query, StringComparison.OrdinalIgnoreCase))
+    );
+
+    IEnumerable<ClassItem> SortedFiltered => Filtered
+        .OrderBy(c => DayIndex(c.Day))
+        .ThenBy(c => c.Start);
+
+    void ResetFilters()
+    {
+        selectedDay = "All Days";
+        selectedStyle = "All Styles";
+        selectedAge = "All Ages";
+        selectedLevel = "All Levels";
+        query = string.Empty;
+    }
+
+    int DayIndex(string day) => day switch
+    {
+        "Monday" => 1,
+        "Tuesday" => 2,
+        "Wednesday" => 3,
+        "Thursday" => 4,
+        "Friday" => 5,
+        "Saturday" => 6,
+        "Sunday" => 7,
+        _ => 0
+    };
+
+    string FormatTime(TimeSpan t)
+    {
+        var dt = DateTime.Today.Add(t);
+        return dt.ToString("h:mm tt");
+    }
+
+    string StyleChip(string style) => style switch
+    {
+        "Ballet" => "chip chip--ballet",
+        "Tap" => "chip chip--tap",
+        "Jazz" => "chip chip--jazz",
+        "Hip-Hop" => "chip chip--hiphop",
+        "Acro" => "chip chip--acro",
+        "Preschool" => "chip chip--preschool",
+        _ => "chip"
+    };
+
+    // Simple, friendly DTO
+    public record ClassItem(
+        string Day,
+        int StartHour, int StartMin,
+        int EndHour, int EndMin,
+        string Studio, string Style, string Level, string AgeGroup, string Teacher
+    )
+    {
+        public TimeSpan Start => new(StartHour, StartMin, 0);
+        public TimeSpan End => new(EndHour, EndMin, 0);
+    }
+}
