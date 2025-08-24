@@ -1,5 +1,5 @@
 # .github/workflows/deploy.yml
-# Linux App Service: framework-dependent publish (no RID, no self-contained)
+# Linux App Service: self-contained publish (removes runtime mismatch)
 
 name: Build and deploy ASP.NET Core app to Azure Web App - cfda2
 
@@ -12,14 +12,14 @@ env:
   APP_NAME: cfda2
   PROJECT_PATH: CFDA2.App/CFDA2.App.csproj
   PUBLISH_DIR: publish
-  ZIP_PATH: publish.zip
+  ZIP_PATH: publish.zip  
+  AZURE_RG: cfda2-poc-rg
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
     steps:
       - uses: actions/checkout@v4
 
@@ -32,11 +32,18 @@ jobs:
       - name: Restore
         run: dotnet restore ${{ env.PROJECT_PATH }}
 
-      # Framework-dependent publish so Azure runs: dotnet YourApp.dll
-      - name: Publish
+      # Self-contained for linux-x64; keep default UseAppHost=true so we get a native launcher
+      - name: Publish self-contained (linux-x64)
         run: |
-          dotnet publish ${{ env.PROJECT_PATH }} -c Release -o "${{ env.PUBLISH_DIR }}"
-          cd "${{ env.PUBLISH_DIR }}" && zip -r "../${{ env.ZIP_PATH }}" . && cd ..
+          dotnet publish ${{ env.PROJECT_PATH }} -c Release -r linux-x64 --self-contained true -o "${{ env.PUBLISH_DIR }}"
+          ls -la "${{ env.PUBLISH_DIR }}"
+
+      - name: Create deploy zip
+        run: |
+          cd "${{ env.PUBLISH_DIR }}"
+          zip -r "../${{ env.ZIP_PATH }}" .
+          cd ..
+          ls -lh "${{ env.ZIP_PATH }}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -50,10 +57,8 @@ jobs:
     permissions:
       id-token: write
       contents: read
-
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: deploy-package
           path: .
@@ -71,3 +76,12 @@ jobs:
           app-name: ${{ env.APP_NAME }}
           slot-name: Production
           package: ${{ env.ZIP_PATH }}
+
+      # OPTIONAL convenience step: set startup command and enable websockets via CLI
+      # If you do not want CLI in CI, set this in Portal manually (see notes below).
+      - name: Configure startup (Linux) via CLI
+        if: env.AZURE_RG != ''
+        uses: azure/CLI@v2
+        with:
+          inlineScript: |
+            az webapp config set -g "${{ env.AZURE_RG }}" -n "${{ env.APP_NAME }}" --startup-file "./CFDA2.App" --web-sockets-enabled true
