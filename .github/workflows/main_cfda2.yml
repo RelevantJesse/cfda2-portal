@@ -1,6 +1,5 @@
 # .github/workflows/deploy.yml
-# Builds a self-contained Blazor Server app and zip-deploys to Azure Web App.
-# IMPORTANT: Set RUNTIME to match your App Service OS: linux-x64 OR win-x64.
+# Builds a self-contained Blazor Server app and zip-deploys it to Azure Web App.
 
 name: Build and deploy ASP.NET Core app to Azure Web App - cfda2
 
@@ -11,7 +10,8 @@ on:
 
 env:
   APP_NAME: cfda2
-  RUNTIME: linux-x64     # CHANGE to win-x64 if your App Service is Windows
+  PROJECT_PATH: src/CFDA2.App/CFDA2.App.csproj
+  RUNTIME: linux-x64
   PUBLISH_DIR: publish
   ZIP_PATH: publish.zip
 
@@ -24,18 +24,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup .NET (10 preview)
+      - name: Setup .NET 10 preview
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-          quality: 'preview'
+          dotnet-quality: 'preview'
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore ${{ env.PROJECT_PATH }}
 
+      # Publish the PROJECT (not the solution). Leave UseAppHost at default (true) for self-contained.
       - name: Publish self-contained
         run: |
-          dotnet publish -c Release -r ${{ env.RUNTIME }} --self-contained true /p:UseAppHost=false -o "${{ env.PUBLISH_DIR }}"
+          dotnet publish ${{ env.PROJECT_PATH }} -c Release -r ${{ env.RUNTIME }} --self-contained true -o "${{ env.PUBLISH_DIR }}"
           ls -la "${{ env.PUBLISH_DIR }}"
 
       - name: Create deploy zip
